@@ -1,0 +1,388 @@
+Program.Sub.ScreenSU.Start
+Gui.frmHist..Create
+Gui.frmHist..Size(10515,7395)
+Gui.frmHist..MinX(0)
+Gui.frmHist..MinY(0)
+Gui.frmHist..Position(0,0)
+Gui.frmHist..BackColor(-2147483633)
+Gui.frmHist..MousePointer(0)
+Gui.frmHist..Caption("Update WO History Numbers")
+Gui.frmHist..Event(UnLoad,frmHist_UnLoad)
+Gui.frmHist.lblPrefix.Create(Label,"Prefix",True,570,255,0,30,120,True,2,"Arial",8,-2147483633,0)
+Gui.frmHist.lblYear.Create(Label,"Year",True,510,255,0,750,120,True,2,"Arial",8,-2147483633,0)
+Gui.frmHist.txtPrefix.Create(TextBox,"",True,570,300,0,30,330,True,2,"Arial",8,-2147483643,1)
+Gui.frmHist.txtPrefix.MaxLength(1)
+Gui.frmHist.txtPrefix.Event(LostFocus,txtPrefix_LostFocus)
+Gui.frmHist.txtYear.Create(TextBox,"",True,570,300,0,675,330,True,2,"Arial",8,-2147483643,1)
+Gui.frmHist.txtYear.MaxLength(4)
+Gui.frmHist.txtYear.NumericOnly(2)
+Gui.frmHist.cmdLoad.Create(Button)
+Gui.frmHist.cmdLoad.Size(600,375)
+Gui.frmHist.cmdLoad.Position(1320,285)
+Gui.frmHist.cmdLoad.Caption("Load")
+Gui.frmHist.cmdLoad.Event(Click,cmdLoad_Click)
+Gui.frmHist.GsGCHist.Create(GsGridControl)
+Gui.frmHist.GsGCHist.Size(10320,5985)
+Gui.frmHist.GsGCHist.Position(30,705)
+Gui.frmHist.GsGCHist.Anchor(15)
+Gui.frmHist.cmdUpdate.Create(Button)
+Gui.frmHist.cmdUpdate.Size(855,375)
+Gui.frmHist.cmdUpdate.Position(9510,6705)
+Gui.frmHist.cmdUpdate.Caption("Update")
+Gui.frmHist.cmdUpdate.Event(Click,cmdUpdate_Click)
+Gui.frmHist.cmdUpdate.Anchor(10)
+Gui.frmHist.pbStatus.Create(ProgressBar)
+Gui.frmHist.pbStatus.Visible(False)
+Gui.frmHist.pbStatus.Size(2310,255)
+Gui.frmHist.pbStatus.Position(1965,360)
+Gui.frmHist.lblStatus.Create(Label,"Updating Work Orders....",False,2025,255,0,1965,150,True,0,"Arial",8,-2147483633,0)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+	V.Global.sDir.Declare
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	V.Local.sIcon.Declare
+	
+	F.Intrinsic.String.Build("{0}\gss2.ico",V.Caller.GasDir,V.Local.sIcon)
+	Gui.frmHist..Icon(V.Local.sIcon)
+	
+	Gui.frmHist..Show
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.Main.End
+
+Program.Sub.frmHist_UnLoad.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.frmHist_UnLoad.End
+
+Program.Sub.txtPrefix_LostFocus.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	V.Local.sPrefix.Declare
+	
+	V.Local.sPrefix.Set(V.Screen.frmHist!txtPrefix.Text)
+	Gui.frmHist.txtPrefix.Text(V.Local.sPrefix.UCase)
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.txtPrefix_LostFocus.End
+
+Program.Sub.cmdLoad_Click.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	V.Local.sSQL.Declare
+	V.Local.iCnt.Declare
+	V.Local.iCnt2.Declare
+	V.Local.sExp.Declare
+	V.Local.sSelect.Declare
+	V.Local.sJob.Declare
+	V.Local.sBase.Declare
+	V.Local.sRet.Declare
+	V.Local.bBase.Declare
+	
+	F.Intrinsic.Control.If(V.Screen.frmHist!txtPrefix.Text,<>,"")
+	F.Intrinsic.Control.AndIf(V.Screen.frmHist!txtYear.Text,<>,"")
+		F.ODBC.Connection!con.OpenCompanyConnection(300)
+		F.Intrinsic.Control.If(V.DataTable.dtHist.Exists)
+			F.Data.DataTable.Close("dtHist")
+		F.Intrinsic.Control.EndIf
+		'Pull Data
+		F.Intrinsic.String.Build("Select Job As Orig_Job,Suffix As Orig_Suffix,'{0}'+Right(Job,5) As New_Job,Suffix As New_Suffix From V_Job_Hist_Mast Where Year(Date_Closed) = {1} Order By Job,Suffix;",V.Screen.frmHist!txtPrefix.Text,V.Screen.frmHist!txtYear.Text,V.Local.sSQL)
+		F.Data.DataTable.CreateFromSQL("dtHist","con",V.Local.sSQL,True)
+		
+		'Evaluate Data; check for duplicates and records in history
+		F.Intrinsic.Control.For(V.Local.iCnt,0,V.DataTable.dtHist.RowCount--,1)
+			F.Intrinsic.String.Build("New_Job = '{0}' And New_Suffix = '{1}'",V.DataTable.dtHist(V.Local.iCnt).New_Job!FieldVal,V.DataTable.dtHist(V.Local.iCnt).New_Suffix!FieldVal,V.Local.sExp)
+			F.Data.DataTable.Select("dtHist",V.Local.sExp,V.Local.sSelect)
+			F.Intrinsic.Control.If(V.Local.sSelect,<>,"***NORETURN***")
+				F.Intrinsic.String.Split(V.Local.sSelect,"*!*",V.Local.sSelect)
+				F.Intrinsic.Control.If(V.Local.sSelect.UBound,>,0)
+					F.Intrinsic.String.Build("{0}A",V.Screen.frmHist!txtPrefix.Text,V.Local.sBase)
+					F.Intrinsic.Control.For(V.Local.iCnt2,0,V.Local.sSelect.UBound,1)
+						V.Local.sJob.Set(V.DataTable.dtHist(V.Local.sSelect(V.Local.iCnt2).Long).New_Job!FieldVal)
+						F.Intrinsic.String.Build("{0}{1}",V.Local.sBase,V.Local.sJob.Right4,V.Local.sJob)
+						F.Data.DataTable.SetValue("dtHist",V.Local.sSelect(V.Local.iCnt2).Long,"New_Job",V.Local.sJob)
+						F.Intrinsic.String.Build("Select Job From V_Job_Hist_Mast Where Job = '{0}' And Suffix = '{1}';",V.Local.sJob,V.DataTable.dtHist(V.Local.iCnt).New_Suffix!FieldVal,V.Local.sSQL)
+						F.ODBC.Connection!con.ExecuteAndReturn(V.Local.sSQL,V.Local.sRet)
+						F.Intrinsic.Control.DoUntil(V.Ambient.ExecuteAndReturnEOF)
+							F.Intrinsic.String.Build("{0}{1}",V.Local.sBase,V.Local.sJob.Right4,V.Local.sJob)
+							F.Intrinsic.String.Build("Select Job From V_Job_Hist_Mast Where Job = '{0}' And Suffix = '{1}';",V.Local.sJob,V.DataTable.dtHist(V.Local.iCnt).New_Suffix!FieldVal,V.Local.sSQL)
+							F.ODBC.Connection!con.ExecuteAndReturn(V.Local.sSQL,V.Local.sRet)
+							F.Intrinsic.String.Base36Increment(V.Local.sBase,V.Local.sBase)
+							V.Local.bBase.Set(True)
+						F.Intrinsic.Control.Loop
+						F.Intrinsic.Control.If(V.Local.bBase,=,False)
+							F.Intrinsic.String.Base36Increment(V.Local.sBase,V.Local.sBase)
+						F.Intrinsic.Control.EndIf
+					F.Intrinsic.Control.Next(V.Local.iCnt2)
+				F.Intrinsic.Control.Else
+					F.Intrinsic.String.Build("Select Job From V_Job_Hist_Mast Where Job = '{0}' And Suffix = '{1}';",V.DataTable.dtHist(V.Local.iCnt).New_Job!FieldVal,V.DataTable.dtHist(V.Local.iCnt).New_Suffix!FieldVal,V.Local.sSQL)
+					F.ODBC.Connection!con.ExecuteAndReturn(V.Local.sSQL,V.Local.sRet)
+					F.Intrinsic.String.Build("{0}A",V.Screen.frmHist!txtPrefix.Text,V.Local.sBase)
+					V.Local.sJob.Set(V.DataTable.dtHist(V.Local.iCnt).New_Job!FieldVal)
+					F.Intrinsic.Control.DoUntil(V.Ambient.ExecuteAndReturnEOF)
+						F.Intrinsic.String.Build("{0}{1}",V.Local.sBase,V.Local.sJob.Right4,V.Local.sJob)
+						F.Intrinsic.String.Build("Select Job From V_Job_Hist_Mast Where Job = '{0}' And Suffix = '{1}';",V.Local.sJob,V.DataTable.dtHist(V.Local.iCnt).New_Suffix!FieldVal,V.Local.sSQL)
+						F.ODBC.Connection!con.ExecuteAndReturn(V.Local.sSQL,V.Local.sRet)
+						F.Intrinsic.String.Base36Increment(V.Local.sBase,V.Local.sBase)
+					F.Intrinsic.Control.Loop
+					F.Data.DataTable.SetValue("dtHist",V.Local.iCnt,"New_Job",V.Local.sJob)
+				F.Intrinsic.Control.EndIf
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.Next(V.Local.iCnt)
+
+		'Show Data
+		Gui.frmHist.GsGCHist.AddGridviewFromDatatable("gvHist","dtHist")
+		Gui.frmHist.GsGCHist.SuspendLayout()
+		Gui.frmHist.GsGCHist.SetGridViewProperty("gvHist","MultiSelect",True)
+		Gui.frmHist.GsGCHist.SetGridViewProperty("gvHist","AllowSort",False)
+		Gui.frmHist.GsGCHist.SetGridViewProperty("gvHist","AllowFilter",True)
+		Gui.frmHist.GsGCHist.SetGridViewProperty("gvHist","OptionsDetailShowDetailTabs",False)
+		Gui.frmHist.GsGCHist.SetGridViewProperty("gvHist","OptionsViewShowGroupPanel",False)
+		
+		Gui.frmHist.GsGCHist.SetColumnProperty("gvHist","Orig_Job","Caption","Old Job")
+		Gui.frmHist.GsGCHist.SetColumnProperty("gvHist","Orig_Suffix","Caption","Old Suffix")
+		Gui.frmHist.GsGCHist.SetColumnProperty("gvHist","New_Job","Caption","New Job")
+		Gui.frmHist.GsGCHist.SetColumnProperty("gvHist","New_Suffix","Caption","New Suffix")
+		
+		Gui.frmHist.GsGCHist.SetColumnProperty("gvHist","Orig_Job","HeaderFontBold",True)
+		Gui.frmHist.GsGCHist.SetColumnProperty("gvHist","Orig_Suffix","HeaderFontBold",True)
+		Gui.frmHist.GsGCHist.SetColumnProperty("gvHist","New_Job","HeaderFontBold",True)
+		Gui.frmHist.GsGCHist.SetColumnProperty("gvHist","New_Suffix","HeaderFontBold",True)
+		
+		Gui.frmHist.GsGCHist.ResumeLayout()
+		Gui.frmHist.GsGCHist.MainView("gvHist")
+		
+		F.ODBC.Connection!con.Close
+	F.Intrinsic.Control.Else
+		F.Intrinsic.UI.Msgbox("Textboxes cannot be empty. Please enter in a value.","Data Validation")
+		F.Intrinsic.Control.ExitSub
+	F.Intrinsic.Control.EndIf
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.cmdLoad_Click.End
+
+Program.Sub.cmdUpdate_Click.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	V.Local.iCnt.Declare
+	V.Local.iPb.Declare
+	V.Local.sSQL.Declare
+	
+	F.Intrinsic.Control.If(V.DataTable.dtHist.Exists)
+		'Show Status Message and disable buttons
+		Gui.frmHist.lblStatus.Caption("Copying Backup Files....")
+		Gui.frmHist.lblStatus.Visible(True)
+		Gui.frmHist.txtPrefix.Enabled(False)
+		Gui.frmHist.txtYear.Enabled(False)
+		Gui.frmHist.cmdLoad.Enabled(False)
+		Gui.frmHist.cmdUpdate.Enabled(False)
+		'Create Backups
+		F.Intrinsic.Control.CallSub(BackupFiles)
+		'Show Status Bar
+		Gui.frmHist.lblStatus.Caption("Updating Work Orders....")
+		Gui.frmHist.pbStatus.Visible(True)
+		Gui.frmHist.pbStatus.Min(0)
+		Gui.frmHist.pbStatus.Max(V.DataTable.dtHist.RowCount)
+		'Open DB Connection
+		F.ODBC.Connection!con.OpenCompanyConnection(300)
+		'Loop through records and save new WO numbers
+		F.Intrinsic.Control.For(V.Local.iCnt,0,V.DataTable.dtHist.RowCount--,1)
+			Gui.frmHist.pbStatus.Value(V.Local.iPb.++)
+			'JOB_HIST_MAST -- JBHMXccc
+			F.Intrinsic.String.Build("Select * From Job_Hist_Mast Where Job = '{0}' And Suffix = '{1}';",V.DataTable.dtHist(V.Local.iCnt).Orig_Job!FieldVal,V.DataTable.dtHist(V.Local.iCnt).Orig_Suffix!FieldVal,V.Local.sSQL)
+			F.Data.DataTable.CreateFromSQL("dtMast","con",V.Local.sSQL,True)
+			F.Intrinsic.Control.If(V.DataTable.dtMast.RowCount,<>,0)
+				F.Intrinsic.String.Build("Delete From Job_Hist_Mast Where Job = '{0}' And Suffix = '{1}';",V.DataTable.dtHist(V.Local.iCnt).Orig_Job!FieldVal,V.DataTable.dtHist(V.Local.iCnt).Orig_Suffix!FieldVal,V.Local.sSQL)
+				F.ODBC.Connection!con.Execute(V.Local.sSQL)
+				F.Data.DataTable.SetValue("dtMast",-1,"JOB",V.DataTable.dtHist(V.Local.iCnt).New_Job!FieldVal,"CODE_SORT",V.DataTable.dtHist(V.Local.iCnt).Orig_Job!FieldVal)
+				F.Data.DataTable.SaveToDB("dtMast","con","Job_Hist_Mast","Job*!*Suffix*!*Filler")
+			F.Intrinsic.Control.EndIf
+			F.Data.DataTable.Close("dtMast")
+			'JOB_HIST_OPS -- JBHOXccc
+			F.Intrinsic.String.Build("Select * From Job_Hist_Ops Where Job = '{0}' And Suffix = '{1}';",V.DataTable.dtHist(V.Local.iCnt).Orig_Job!FieldVal,V.DataTable.dtHist(V.Local.iCnt).Orig_Suffix!FieldVal,V.Local.sSQL)
+			F.Data.DataTable.CreateFromSQL("dtOps","con",V.Local.sSQL,True)
+			F.Intrinsic.Control.If(V.DataTable.dtOps.RowCount,<>,0)
+				F.Intrinsic.String.Build("Delete From Job_Hist_Ops Where Job = '{0}' And Suffix = '{1}';",V.DataTable.dtHist(V.Local.iCnt).Orig_Job!FieldVal,V.DataTable.dtHist(V.Local.iCnt).Orig_Suffix!FieldVal,V.Local.sSQL)
+				F.ODBC.Connection!con.Execute(V.Local.sSQL)
+				F.Data.DataTable.SetValue("dtOps",-1,"JOB",V.DataTable.dtHist(V.Local.iCnt).New_Job!FieldVal)
+				F.Data.DataTable.SaveToDB("dtOps","con","Job_Hist_Ops","Job*!*Suffix*!*Seq*!*Filler1*!*WO_Insert")
+			F.Intrinsic.Control.EndIf
+			F.Data.DataTable.Close("dtOps")
+			'JOB_HIST_DTL -- JBHDXccc
+			F.Intrinsic.String.Build("Select * From Job_Hist_Dtl Where Job = '{0}' And Suffix = '{1}';",V.DataTable.dtHist(V.Local.iCnt).Orig_Job!FieldVal,V.DataTable.dtHist(V.Local.iCnt).Orig_Suffix!FieldVal,V.Local.sSQL)
+			F.Data.DataTable.CreateFromSQL("dtDtl","con",V.Local.sSQL,True)
+			F.Intrinsic.Control.If(V.DataTable.dtDtl.RowCount,<>,0)
+				F.Intrinsic.String.Build("Delete From Job_Hist_Dtl Where Job = '{0}' And Suffix = '{1}';",V.DataTable.dtHist(V.Local.iCnt).Orig_Job!FieldVal,V.DataTable.dtHist(V.Local.iCnt).Orig_Suffix!FieldVal,V.Local.sSQL)
+				F.ODBC.Connection!con.Execute(V.Local.sSQL)
+				F.Data.DataTable.SetValue("dtDtl",-1,"JOB",V.DataTable.dtHist(V.Local.iCnt).New_Job!FieldVal)
+				F.Data.DataTable.SaveToDB("dtDtl","con","Job_Hist_Dtl","Job*!*Suffix*!*Seq*!*Fill*!*Date_Sequence*!*Sequence_Key")
+			F.Intrinsic.Control.EndIf
+			F.Data.DataTable.Close("dtDtl")
+			'JOB_SERIAL_HIS -- JBHSNccc
+			F.Intrinsic.String.Build("Select * From Job_Serial_His Where Job = '{0}' And Suffix = '{1}';",V.DataTable.dtHist(V.Local.iCnt).Orig_Job!FieldVal,V.DataTable.dtHist(V.Local.iCnt).Orig_Suffix!FieldVal,V.Local.sSQL)
+			F.Data.DataTable.CreateFromSQL("dtSerial","con",V.Local.sSQL,True)
+			F.Intrinsic.Control.If(V.DataTable.dtSerial.RowCount,<>,0)
+				F.Intrinsic.String.Build("Delete From Job_Serial_His Where Job = '{0}' And Suffix = '{1}';",V.DataTable.dtHist(V.Local.iCnt).Orig_Job!FieldVal,V.DataTable.dtHist(V.Local.iCnt).Orig_Suffix!FieldVal,V.Local.sSQL)
+				F.ODBC.Connection!con.Execute(V.Local.sSQL)
+				F.Data.DataTable.SetValue("dtSerial",-1,"JOB",V.DataTable.dtHist(V.Local.iCnt).New_Job!FieldVal)
+				F.Data.DataTable.SaveToDB("dtSerial","con","Job_Serial_His","Job*!*Suffix*!*Seqeunce*!*Serial_Start*!*Date_Serial*!*Time_Serial")
+			F.Intrinsic.Control.EndIf
+			F.Data.DataTable.Close("dtSerial")
+			'JOB_DTL_SUPP_H -- cccDHSUP-V0
+			F.Intrinsic.String.Build("Select * From Job_Dtl_Supp_H Where Job = '{0}' And Suffix = '{1}';",V.DataTable.dtHist(V.Local.iCnt).Orig_Job!FieldVal,V.DataTable.dtHist(V.Local.iCnt).Orig_Suffix!FieldVal,V.Local.sSQL)
+			F.Data.DataTable.CreateFromSQL("dtSupp","con",V.Local.sSQL,True)
+			F.Intrinsic.Control.If(V.DataTable.dtSupp.RowCount,<>,0)
+				F.Intrinsic.String.Build("Delete From Job_Dtl_Supp_H Where Job = '{0}' And Suffix = '{1}';",V.DataTable.dtHist(V.Local.iCnt).Orig_Job!FieldVal,V.DataTable.dtHist(V.Local.iCnt).Orig_Suffix!FieldVal,V.Local.sSQL)
+				F.ODBC.Connection!con.Execute(V.Local.sSQL)
+				F.Data.DataTable.SetValue("dtSupp",-1,"JOB",V.DataTable.dtHist(V.Local.iCnt).New_Job!FieldVal)
+				F.Data.DataTable.SaveToDB("dtSupp","con","Job_Dtl_Supp_H","Job*!*Suffix*!*Seq*!*Fill*!*Sup_Date*!*Key_Seq")
+			F.Intrinsic.Control.EndIf
+			F.Data.DataTable.Close("dtSupp")
+			'JOB_DTL_H_NOTES -- cccJOBDHTXT-V0
+			F.Intrinsic.String.Build("Select * From Job_Dtl_H_Notes Where Job = '{0}' And Suffix = '{1}';",V.DataTable.dtHist(V.Local.iCnt).Orig_Job!FieldVal,V.DataTable.dtHist(V.Local.iCnt).Orig_Suffix!FieldVal,V.Local.sSQL)
+			F.Data.DataTable.CreateFromSQL("dtNotes","con",V.Local.sSQL,True)
+			F.Intrinsic.Control.If(V.DataTable.dtNotes.RowCount,<>,0)
+				F.Intrinsic.String.Build("Delete From Job_Dtl_H_Notes Where Job = '{0}' And Suffix = '{1}';",V.DataTable.dtHist(V.Local.iCnt).Orig_Job!FieldVal,V.DataTable.dtHist(V.Local.iCnt).Orig_Suffix!FieldVal,V.Local.sSQL)
+				F.ODBC.Connection!con.Execute(V.Local.sSQL)
+				F.Data.DataTable.SetValue("dtNotes",-1,"JOB",V.DataTable.dtHist(V.Local.iCnt).New_Job!FieldVal)
+				F.Data.DataTable.SaveToDB("dtNotes","con","Job_Dtl_H_Notes","Job*!*Suffix*!*Job_Seq*!*Filler*!*Date*!*Seq")
+			F.Intrinsic.Control.EndIf
+			F.Data.DataTable.Close("dtNotes")
+			'WO_H_SEQ_COMMENTS -- cccJOBHTXT-V0
+			F.Intrinsic.String.Build("Select * From WO_H_Seq_Comments Where WO = '{0}' And WO_Suffix = '{1}';",V.DataTable.dtHist(V.Local.iCnt).Orig_Job!FieldVal,V.DataTable.dtHist(V.Local.iCnt).Orig_Suffix!FieldVal,V.Local.sSQL)
+			F.Data.DataTable.CreateFromSQL("dtComm","con",V.Local.sSQL,True)
+			F.Intrinsic.Control.If(V.DataTable.dtComm.RowCount,<>,0)
+				F.Intrinsic.String.Build("Delete From WO_H_Seq_Comments Where WO = '{0}' And WO_Suffix = '{1}';",V.DataTable.dtHist(V.Local.iCnt).Orig_Job!FieldVal,V.DataTable.dtHist(V.Local.iCnt).Orig_Suffix!FieldVal,V.Local.sSQL)
+				F.ODBC.Connection!con.Execute(V.Local.sSQL)
+				F.Data.DataTable.SetValue("dtComm",-1,"WO",V.DataTable.dtHist(V.Local.iCnt).New_Job!FieldVal)
+				F.Data.DataTable.SaveToDB("dtComm","con","WO_H_Seq_Comments","WO*!*WO_Suffix*!*WO_Seq")
+			F.Intrinsic.Control.EndIf
+			F.Data.DataTable.Close("dtComm")
+		F.Intrinsic.Control.Next(V.Local.iCnt)
+		'Close Connection
+		F.ODBC.Connection!con.Close
+		'Hide Status Message and Bar
+		Gui.frmHist.lblStatus.Visible(False)
+		Gui.frmHist.pbStatus.Visible(False)
+		Gui.frmHist.txtPrefix.Enabled(True)
+		Gui.frmHist.txtYear.Enabled(True)
+		Gui.frmHist.cmdLoad.Enabled(True)
+		Gui.frmHist.cmdUpdate.Enabled(True)
+		'Remove Backups
+		F.Intrinsic.Control.CallSub(RemoveBackupFiles)
+		'Clear Screen
+		F.Intrinsic.Control.CallSub(ClearScreen)
+	F.Intrinsic.Control.EndIf
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.cmdUpdate_Click.End
+
+Program.Sub.BackupFiles.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	V.Local.sFile.Declare
+	V.Local.sFileBackup.Declare
+	
+	'Create Directory
+	F.Intrinsic.String.Build("{0}\4859_FILES_{1}_{2}",V.Caller.FilesDir,V.Ambient.Date.FormatYYYYMMDD,V.Ambient.Time.FormatHHNNSS,V.Global.sDir)
+	F.Intrinsic.File.CreateDir(V.Global.sDir)
+	
+	'JOB_HIST_MAST -- JBHMXccc
+	F.Intrinsic.String.Build("{0}\JBHMX{1}",V.Caller.FilesDir,V.Caller.CompanyCode,V.Local.sFile)
+	F.Intrinsic.String.Build("{0}\JBHMX{1}",V.Global.sDir,V.Caller.CompanyCode,V.Local.sFileBackup)
+	F.Intrinsic.File.CopyFile(V.Local.sFile,V.Local.sFileBackup)
+	'JOB_HIST_OPS -- JBHOXccc
+	F.Intrinsic.String.Build("{0}\JBHOX{1}",V.Caller.FilesDir,V.Caller.CompanyCode,V.Local.sFile)
+	F.Intrinsic.String.Build("{0}\JBHOX{1}",V.Global.sDir,V.Caller.CompanyCode,V.Local.sFileBackup)
+	F.Intrinsic.File.CopyFile(V.Local.sFile,V.Local.sFileBackup)
+	'JOB_HIST_DTL -- JBHDXccc
+	F.Intrinsic.String.Build("{0}\JBHDX{1}",V.Caller.FilesDir,V.Caller.CompanyCode,V.Local.sFile)
+	F.Intrinsic.String.Build("{0}\JBHDX{1}",V.Global.sDir,V.Caller.CompanyCode,V.Local.sFileBackup)
+	F.Intrinsic.File.CopyFile(V.Local.sFile,V.Local.sFileBackup)
+	'JOB_SERIAL_HIS -- JBHSNccc
+	F.Intrinsic.String.Build("{0}\JBHSN{1}",V.Caller.FilesDir,V.Caller.CompanyCode,V.Local.sFile)
+	F.Intrinsic.String.Build("{0}\JBHSN{1}",V.Global.sDir,V.Caller.CompanyCode,V.Local.sFileBackup)
+	F.Intrinsic.File.CopyFile(V.Local.sFile,V.Local.sFileBackup)
+	'JOB_DTL_SUPP_H -- cccDHSUP-V0
+	F.Intrinsic.String.Build("{0}\{1}DHSUP-V0",V.Caller.FilesDir,V.Caller.CompanyCode,V.Local.sFile)
+	F.Intrinsic.String.Build("{0}\{1}DHSUP-V0",V.Global.sDir,V.Caller.CompanyCode,V.Local.sFileBackup)
+	F.Intrinsic.File.CopyFile(V.Local.sFile,V.Local.sFileBackup)
+	'JOB_DTL_H_NOTES -- cccJOBDHTXT-V0
+	F.Intrinsic.String.Build("{0}\{1}JOBDHTXT-V0",V.Caller.FilesDir,V.Caller.CompanyCode,V.Local.sFile)
+	F.Intrinsic.String.Build("{0}\{1}JOBDHTXT-V0",V.Global.sDir,V.Caller.CompanyCode,V.Local.sFileBackup)
+	F.Intrinsic.File.CopyFile(V.Local.sFile,V.Local.sFileBackup)
+	'WO_H_SEQ_COMMENTS -- cccJOBHTXT-V0
+	F.Intrinsic.String.Build("{0}\{1}JOBHTXT-V0",V.Caller.FilesDir,V.Caller.CompanyCode,V.Local.sFile)
+	F.Intrinsic.String.Build("{0}\{1}JOBHTXT-V0",V.Global.sDir,V.Caller.CompanyCode,V.Local.sFileBackup)
+	F.Intrinsic.File.CopyFile(V.Local.sFile,V.Local.sFileBackup)
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.BackupFiles.End
+
+Program.Sub.ClearScreen.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	Gui.frmHist.txtPrefix.Text("")
+	Gui.frmHist.txtYear.Text("")
+	Gui.frmHist.GsGCHist.ClearRows("gvHist")
+	F.Data.DataTable.Close("dtHist")
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.ClearScreen.End
+
+Program.Sub.RemoveBackupFiles.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	'Delete Directory
+	F.Intrinsic.File.DeleteDir(V.Global.sDir)
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.RemoveBackupFiles.End
